@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayurveda Teacher Database Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1e293b;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .icon {
+            font-size: 16px;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+
+        .icon-lg {
+            font-size: 24px;
+            width: 32px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:not(.active) {
+            color: #64748b;
+        }
+
+        .tab:not(.active):hover {
+            color: #1e293b;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .select {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-emerald {
+            background: #059669;
+            color: white;
+        }
+
+        .btn-emerald:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .faculty-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .faculty-designation {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .faculty-experience {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .college-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .college-address {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .college-website {
+            color: #2563eb;
+            text-decoration: underline;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .college-website:hover {
+            color: #1d4ed8;
+        }
+
+        .contact-primary {
+            color: #1e293b;
+        }
+
+        .contact-secondary {
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .action-btn.edit {
+            color: #2563eb;
+        }
+
+        .action-btn.delete {
+            color: #dc2626;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                min-width: auto;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .modal-content {
+                margin: 1rem;
+                width: auto;
+            }
+
+            table {
+                font-size: 0.875rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <span class="icon-lg">🏥</span>
+                <h1>Ayurveda Teacher Database Tool</h1>
+            </div>
+            <div id="authSection">
+                <button id="loginBtn" class="btn btn-primary">
+                    <span class="icon">🔐</span>
+                    Admin Login
+                </button>
+                <div id="adminPanel" style="display: none;">
+                    <span style="color: #93c5fd; margin-right: 1rem;">Admin Panel</span>
+                    <button id="logoutBtn" class="btn btn-danger">
+                        <span class="icon">🚪</span>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="colleges">
+                <span class="icon">🏫</span>
+                <span>Colleges (<span id="collegeCount">1</span>)</span>
+            </button>
+            <button class="tab" data-tab="faculties">
+                <span class="icon">👥</span>
+                <span>Faculty Members (<span id="facultyCount">1</span>)</span>
+            </button>
+        </div>
+
+        <div class="controls">
+            <div class="search-container">
+                <span class="search-icon icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+            </div>
+
+            <select id="collegeFilter" class="select" style="display: none;">
+                <option value="all">All Colleges</option>
+            </select>
+
+            <div id="adminControls" style="display: none;">
+                <button id="addBtn" class="btn btn-success">
+                    <span class="icon">➕</span>
+                    <span id="addBtnText">Add College</span>
+                </button>
+                
+                <button id="exportCsvBtn" class="btn btn-primary">
+                    <span class="icon">📄</span>
+                    CSV
+                </button>
+                
+                <button id="exportExcelBtn" class="btn btn-emerald">
+                    <span class="icon">📊</span>
+                    Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="data-table">
+            <div id="collegesView">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>College Details</th>
+                            <th>Contact Information</th>
+                            <th>Principal</th>
+                            <th id="collegeActionsHeader" style="display: none;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="collegesTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="facultiesView" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faculty Details</th>
+                            <th>College</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th>Contact</th>
+                            <th id="facultyActionsHeader" style="display: none;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facultiesTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem; color: #1e293b; font-size: 1.25rem;">Admin Login</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="button" id="cancelLogin" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- College Form Modal -->
+    <div id="collegeModal" class="modal">
+        <div class="modal-content">
+            <h3 id="collegeModalTitle" style="margin-bottom: 1.5rem; color: #1e293b; font-size: 1.25rem;">Add New College</h3>
+            <form id="collegeForm">
+                <div class="form-group">
+                    <label class="form-label">College Name *</label>
+                    <input type="text" id="collegeName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Full Postal Address *</label>
+                    <textarea id="collegeAddress" class="form-input form-textarea" rows="3" required></textarea>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Contact Number *</label>
+                        <input type="tel" id="collegeContact" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email ID *</label>
+                        <input type="email" id="collegeEmail" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website URL</label>
+                    <input type="url" id="collegeWebsite" class="form-input" placeholder="https://">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Principal Name *</label>
+                    <input type="text" id="collegePrincipal" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="collegeSubmitBtn">Add College</button>
+                    <button type="button" id="cancelCollege" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Faculty Form Modal -->
+    <div id="facultyModal" class="modal">
+        <div class="modal-content">
+            <h3 id="facultyModalTitle" style="margin-bottom: 1.5rem; color: #1e293b; font-size: 1.25rem;">Add New Faculty Member</h3>
+            <form id="facultyForm">
+                <div class="form-group">
+                    <label class="form-label">Faculty Name *</label>
+                    <input type="text" id="facultyName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">College *</label>
+                    <select id="facultyCollege" class="form-input" required>
+                        <option value="">Select College</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Department *</label>
+                        <select id="facultyDepartment" class="form-input" required>
+                            <option value="">Select Department</option>
+                            <option value="SS">Samhita Siddhanta (SS)</option>
+                            <option value="SR">Sharir Rachana (SR)</option>
+                            <option value="SK">Sharir Kriya (SK)</option>
+                            <option value="DG">Dravyaguna (DG)</option>
+                            <option value="RSBK">Rasashastra & Bhaishajya Kalpana (RSBK)</option>
+                            <option value="AT">Agadtantra (AT)</option>
+                            <option value="RN">Rognidan (RN)</option>
+                            <option value="SW">Swasthavritta (SW)</option>
+                            <option value="KC">Kayachikitsa (KC)</option>
+                            <option value="PK">Panchakarma (PK)</option>
+                            <option value="ST">Shalya Tantra (ST)</option>
+                            <option value="SKT">Shalakya Tantra (SKT)</option>
+                            <option value="PTSR">Prasuti Tantra & Stree Roga (PTSR)</option>
+                            <option value="KB">Kaumarbhritya (KB)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Designation *</label>
+                        <select id="facultyDesignation" class="form-input" required>
+                            <option value="">Select Designation</option>
+                            <option value="Assistant Professor">Assistant Professor</option>
+                            <option value="Associate Professor">Associate Professor</option>
+                            <option value="Professor">Professor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teaching Experience *</label>
+                    <select id="facultyExperience" class="form-input" required>
+                        <option value="">Select Experience Range</option>
+                        <option value="1-5 years">1-5 years</option>
+                        <option value="5-10 years">5-10 years</option>
+                        <option value="10-15 years">10-15 years</option>
+                        <option value="> 15 years">> 15 years</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Email ID *</label>
+                        <input type="email" id="facultyEmailInput" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mobile Number *</label>
+                        <input type="tel" id="facultyMobile" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="facultySubmitBtn">Add Faculty</button>
+                    <button type="button" id="cancelFaculty" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let colleges = [
+            {
+                id: 1,
+                name: 'Government Ayurveda College',
+                address: '123 Medical Campus, University Road, Chennai, Tamil Nadu - 600001',
+                contactNumber: '+91-44-12345678',
+                email: 'principal@govayurveda.edu.in',
+                website: 'https://govayurveda.edu.in',
+                principal: 'Dr. Rajesh Kumar'
+            }
+        ];
+
+        let faculties = [
+            {
+                id: 1,
+                collegeId: 1,
+                name: 'Dr. Priya Sharma',
+                department: 'KC',
+                designation: 'Professor',
+                experience: '> 15 years',
+                email: 'priya.sharma@govayurveda.edu.in',
+                mobile: '+91-9876543210'
+            }
+        ];
+
+        let currentView = 'colleges';
+        let isAdminLoggedIn = false;
+        let editingCollege = null;
+        let editingFaculty = null;
+
+        const ADMIN_CREDENTIALS = {
+            username: 'admin',
+            password: 'ayurveda2024'
+        };
+
+        const departments = {
+            'SS': 'Samhita Siddhanta (SS)',
+            'SR': 'Sharir Rachana (SR)',
+            'SK': 'Sharir Kriya (SK)',
+            'DG': 'Dravyaguna (DG)',
+            'RSBK': 'Rasashastra & Bhaishajya Kalpana (RSBK)',
+            'AT': 'Agadtantra (AT)',
+            'RN': 'Rognidan (RN)',
+            'SW': 'Swasthavritta (SW)',
+            'KC': 'Kayachikitsa (KC)',
+            'PK': 'Panchakarma (PK)',
+            'ST': 'Shalya Tantra (ST)',
+            'SKT': 'Shalakya Tantra (SKT)',
+            'PTSR': 'Prasuti Tantra & Stree Roga (PTSR)',
+            'KB': 'Kaumarbhritya (KB)'
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            updateView();
+            updateCounts();
+            populateCollegeOptions();
+        });
+
+        function initializeEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    currentView = tab.dataset.tab;
+                    updateView();
+                });
+            });
+
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', renderData);
+            document.getElementById('collegeFilter').addEventListener('change', renderData);
+
+            // Auth
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                document.getElementById('loginModal').classList.add('show');
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('cancelLogin').addEventListener('click', () => {
+                document.getElementById('loginModal').classList.remove('show');
+            });
+
+            // Admin controls
+            document.getElementById('addBtn').addEventListener('click', () => {
+                if (currentView === 'colleges') {
+                    showCollegeForm();
+                } else {
+                    showFacultyForm();
+                }
+            });
+
+            document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
+            document.getElementById('exportExcelBtn').addEventListener('click', () => exportData('excel'));
+
+            // Form handling
+            document.getElementById('collegeForm').addEventListener('submit', handleCollegeSubmit);
+            document.getElementById('facultyForm').addEventListener('submit', handleFacultySubmit);
+
+            document.getElementById('cancelCollege').addEventListener('click', () => {
+                document.getElementById('collegeModal').classList.remove('show');
+                editingCollege = null;
+            });
+
+            document.getElementById('cancelFaculty').addEventListener('click', () => {
+                document.getElementById('facultyModal').classList.remove('show');
+                editingFaculty = null;
+            });
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                isAdminLoggedIn = true;
+                document.getElementById('loginModal').classList.remove('show');
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                updateAuthUI();
+                renderData();
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        }
+
+        function logout() {
+            isAdminLoggedIn = false;
+            updateAuthUI();
+            renderData();
+        }
+
+        function updateAuthUI() {
+            const loginBtn = document.getElementById('loginBtn');
+            const adminPanel = document.getElementById('adminPanel');
+            const adminControls = document.getElementById('adminControls');
+            const collegeActionsHeader = document.getElementById('collegeActionsHeader');
+            const facultyActionsHeader = document.getElementById('facultyActionsHeader');
+
+            if (isAdminLoggedIn) {
+                loginBtn.style.display = 'none';
+                adminPanel.style.display = 'flex';
+                adminControls.style.display = 'flex';
+                collegeActionsHeader.style.display = 'table-cell';
+                facultyActionsHeader.style.display = 'table-cell';
+            } else {
+                loginBtn.style.display = 'flex';
+                adminPanel.style.display = 'none';
+                adminControls.style.display = 'none';
+                collegeActionsHeader.style.display = 'none';
+                facultyActionsHeader.style.display = 'none';
+            }
+        }
+
+        function updateView() {
+            const tabs = document.querySelectorAll('.tab');
+            const collegesView = document.getElementById('collegesView');
+            const facultiesView = document.getElementById('facultiesView');
+            const collegeFilter = document.getElementById('collegeFilter');
+            const addBtnText = document.getElementById('addBtnText');
+            const searchInput = document.getElementById('searchInput');
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === currentView);
+            });
+
+            if (currentView === 'colleges') {
+                collegesView.style.display = 'block';
+                facultiesView.style.display = 'none';
+                collegeFilter.style.display = 'none';
+                addBtnText.textContent = 'Add College';
+                searchInput.placeholder = 'Search colleges...';
+            } else {
+                collegesView.style.display = 'none';
+                facultiesView.style.display = 'block';
+                collegeFilter.style.display = 'block';
+                addBtnText.textContent = 'Add Faculty';
+                searchInput.placeholder = 'Search faculty...';
+            }
+
+            renderData();
+        }
+
+        function updateCounts() {
+            document.getElementById('collegeCount').textContent = colleges.length;
+            document.getElementById('facultyCount').textContent = faculties.length;
+        }
+
+        function populateCollegeOptions() {
+            const collegeFilter = document.getElementById('collegeFilter');
+            const facultyCollege = document.getElementById('facultyCollege');
+
+            // Clear existing options
+            collegeFilter.innerHTML = '<option value="all">All Colleges</option>';
+            facultyCollege.innerHTML = '<option value="">Select College</option>';
+
+            colleges.forEach(college => {
+                collegeFilter.innerHTML += `<option value="${college.id}">${college.name}</option>`;
+                facultyCollege.innerHTML += `<option value="${college.id}">${college.name}</option>`;
+            });
+        }
+
+        function getFilteredData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCollege = document.getElementById('collegeFilter').value;
+
+            if (currentView === 'colleges') {
+                return colleges.filter(college => 
+                    college.name.toLowerCase().includes(searchTerm) ||
+                    college.address.toLowerCase().includes(searchTerm) ||
+                    college.principal.toLowerCase().includes(searchTerm) ||
+                    college.email.toLowerCase().includes(searchTerm)
+                );
+            } else {
+                let filtered = faculties.filter(faculty => {
+                    const college = colleges.find(c => c.id === faculty.collegeId);
+                    const collegeName = college ? college.name : '';
+                    const departmentLabel = departments[faculty.department] || faculty.department;
+
+                    return faculty.name.toLowerCase().includes(searchTerm) ||
+                           collegeName.toLowerCase().includes(searchTerm) ||
+                           departmentLabel.toLowerCase().includes(searchTerm) ||
+                           faculty.designation.toLowerCase().includes(searchTerm) ||
+                           faculty.email.toLowerCase().includes(searchTerm);
+                });
+
+                if (selectedCollege !== 'all') {
+                    filtered = filtered.filter(faculty => faculty.collegeId === parseInt(selectedCollege));
+                }
+
+                return filtered;
+            }
