@@ -44,18 +44,6 @@
             font-weight: bold;
         }
 
-        .icon {
-            font-size: 16px;
-            display: inline-block;
-            width: 20px;
-            text-align: center;
-        }
-
-        .icon-lg {
-            font-size: 24px;
-            width: 32px;
-        }
-
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -97,6 +85,7 @@
 
         .tab:not(.active):hover {
             color: #1e293b;
+            background: #f8fafc;
         }
 
         .controls {
@@ -159,6 +148,12 @@
             align-items: center;
             gap: 0.5rem;
             font-weight: 500;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
@@ -176,15 +171,6 @@
         }
 
         .btn-success:hover {
-            background: #047857;
-        }
-
-        .btn-emerald {
-            background: #059669;
-            color: white;
-        }
-
-        .btn-emerald:hover {
             background: #047857;
         }
 
@@ -429,18 +415,18 @@
     <header class="header">
         <div class="header-content">
             <div class="header-title">
-                <span class="icon-lg">🏥</span>
+                <span style="font-size: 24px;">🏥</span>
                 <h1>Ayurveda Teacher Database Tool</h1>
             </div>
             <div id="authSection">
                 <button id="loginBtn" class="btn btn-primary">
-                    <span class="icon">🔐</span>
+                    <span>🔐</span>
                     Admin Login
                 </button>
                 <div id="adminPanel" style="display: none;">
                     <span style="color: #93c5fd; margin-right: 1rem;">Admin Panel</span>
                     <button id="logoutBtn" class="btn btn-danger">
-                        <span class="icon">🚪</span>
+                        <span>🚪</span>
                         Logout
                     </button>
                 </div>
@@ -450,19 +436,19 @@
 
     <div class="container">
         <div class="tabs">
-            <button class="tab active" data-tab="colleges">
-                <span class="icon">🏫</span>
+            <button class="tab active" id="collegesTab">
+                <span>🏫</span>
                 <span>Colleges (<span id="collegeCount">1</span>)</span>
             </button>
-            <button class="tab" data-tab="faculties">
-                <span class="icon">👥</span>
+            <button class="tab" id="facultiesTab">
+                <span>👥</span>
                 <span>Faculty Members (<span id="facultyCount">1</span>)</span>
             </button>
         </div>
 
         <div class="controls">
             <div class="search-container">
-                <span class="search-icon icon">🔍</span>
+                <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" class="search-input" placeholder="Search...">
             </div>
 
@@ -470,19 +456,21 @@
                 <option value="all">All Colleges</option>
             </select>
 
+            <!-- Public Add Button (Always Visible) -->
+            <button id="publicAddBtn" class="btn btn-success">
+                <span>➕</span>
+                <span id="publicAddBtnText">Add College</span>
+            </button>
+
+            <!-- Admin Controls (Only when logged in) -->
             <div id="adminControls" style="display: none;">
-                <button id="addBtn" class="btn btn-success">
-                    <span class="icon">➕</span>
-                    <span id="addBtnText">Add College</span>
-                </button>
-                
                 <button id="exportCsvBtn" class="btn btn-primary">
-                    <span class="icon">📄</span>
+                    <span>📄</span>
                     CSV
                 </button>
                 
-                <button id="exportExcelBtn" class="btn btn-emerald">
-                    <span class="icon">📊</span>
+                <button id="exportExcelBtn" class="btn btn-success">
+                    <span>📊</span>
                     Excel
                 </button>
             </div>
@@ -500,6 +488,7 @@
                         </tr>
                     </thead>
                     <tbody id="collegesTableBody">
+                        <!-- Data will be inserted here -->
                     </tbody>
                 </table>
             </div>
@@ -517,6 +506,7 @@
                         </tr>
                     </thead>
                     <tbody id="facultiesTableBody">
+                        <!-- Data will be inserted here -->
                     </tbody>
                 </table>
             </div>
@@ -711,87 +701,207 @@
             'KB': 'Kaumarbhritya (KB)'
         };
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEventListeners();
-            updateView();
-            updateCounts();
-            populateCollegeOptions();
-        });
-
-        function initializeEventListeners() {
-            // Tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    currentView = tab.dataset.tab;
-                    updateView();
-                });
-            });
-
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('input', renderData);
-            document.getElementById('collegeFilter').addEventListener('change', renderData);
-
-            // Auth
-            document.getElementById('loginBtn').addEventListener('click', () => {
-                document.getElementById('loginModal').classList.add('show');
-            });
-
-            document.getElementById('logoutBtn').addEventListener('click', logout);
-
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            document.getElementById('cancelLogin').addEventListener('click', () => {
-                document.getElementById('loginModal').classList.remove('show');
-            });
-
-            // Admin controls
-            document.getElementById('addBtn').addEventListener('click', () => {
-                if (currentView === 'colleges') {
-                    showCollegeForm();
-                } else {
-                    showFacultyForm();
-                }
-            });
-
-            document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
-            document.getElementById('exportExcelBtn').addEventListener('click', () => exportData('excel'));
-
-            // Form handling
-            document.getElementById('collegeForm').addEventListener('submit', handleCollegeSubmit);
-            document.getElementById('facultyForm').addEventListener('submit', handleFacultySubmit);
-
-            document.getElementById('cancelCollege').addEventListener('click', () => {
-                document.getElementById('collegeModal').classList.remove('show');
-                editingCollege = null;
-            });
-
-            document.getElementById('cancelFaculty').addEventListener('click', () => {
-                document.getElementById('facultyModal').classList.remove('show');
-                editingFaculty = null;
-            });
+        // Modal functions
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+        }
 
-            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-                isAdminLoggedIn = true;
-                document.getElementById('loginModal').classList.remove('show');
-                document.getElementById('username').value = '';
-                document.getElementById('password').value = '';
-                updateAuthUI();
-                renderData();
+        function showCollegeModal() {
+            document.getElementById('collegeModal').classList.add('show');
+        }
+
+        function hideCollegeModal() {
+            document.getElementById('collegeModal').classList.remove('show');
+        }
+
+        function showFacultyModal() {
+            document.getElementById('facultyModal').classList.add('show');
+        }
+
+        function hideFacultyModal() {
+            document.getElementById('facultyModal').classList.remove('show');
+        }
+
+        // View switching
+        function switchToColleges() {
+            currentView = 'colleges';
+            updateView();
+        }
+
+        function switchToFaculties() {
+            currentView = 'faculties';
+            updateView();
+        }
+
+        function updateView() {
+            const collegesTab = document.getElementById('collegesTab');
+            const facultiesTab = document.getElementById('facultiesTab');
+            
+            if (currentView === 'colleges') {
+                collegesTab.classList.add('active');
+                facultiesTab.classList.remove('active');
+                document.getElementById('collegesView').style.display = 'block';
+                document.getElementById('facultiesView').style.display = 'none';
+                document.getElementById('collegeFilter').style.display = 'none';
+                document.getElementById('publicAddBtnText').textContent = 'Add College';
             } else {
-                alert('Invalid credentials. Please try again.');
+                collegesTab.classList.remove('active');
+                facultiesTab.classList.add('active');
+                document.getElementById('collegesView').style.display = 'none';
+                document.getElementById('facultiesView').style.display = 'block';
+                document.getElementById('collegeFilter').style.display = 'block';
+                document.getElementById('publicAddBtnText').textContent = 'Add Faculty';
+            }
+            
+            renderData();
+        }
+
+        // Data rendering
+        function renderData() {
+            if (currentView === 'colleges') {
+                renderColleges();
+            } else {
+                renderFaculties();
             }
         }
 
-        function logout() {
-            isAdminLoggedIn = false;
-            updateAuthUI();
-            renderData();
+        function renderColleges() {
+            const data = getFilteredData();
+            const tbody = document.getElementById('collegesTableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${isAdminLoggedIn ? '4' : '3'}" class="empty-state">No colleges found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(college => `
+                <tr>
+                    <td>
+                        <div class="college-name">${college.name}</div>
+                        <div class="college-address">${college.address}</div>
+                        ${college.website ? `<a href="${college.website}" target="_blank" class="college-website">Visit Website</a>` : ''}
+                    </td>
+                    <td>
+                        <div class="contact-primary">${college.contactNumber}</div>
+                        <div class="contact-secondary">${college.email}</div>
+                    </td>
+                    <td>${college.principal}</td>
+                    ${isAdminLoggedIn ? `
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn edit" onclick="editCollege(${college.id})" title="Edit">✏️</button>
+                                <button class="action-btn delete" onclick="deleteCollege(${college.id})" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    ` : ''}
+                </tr>
+            `).join('');
+        }
+
+        function renderFaculties() {
+            const data = getFilteredData();
+            const tbody = document.getElementById('facultiesTableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${isAdminLoggedIn ? '6' : '5'}" class="empty-state">No faculty members found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(faculty => {
+                const college = colleges.find(c => c.id === faculty.collegeId);
+                const departmentLabel = departments[faculty.department] || faculty.department;
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="faculty-name">${faculty.name}</div>
+                            <div class="faculty-designation">${faculty.designation}</div>
+                            <div class="faculty-experience">Experience: ${faculty.experience}</div>
+                        </td>
+                        <td>${college ? college.name : 'Unknown College'}</td>
+                        <td>${departmentLabel}</td>
+                        <td>${faculty.designation}</td>
+                        <td>
+                            <div class="contact-primary">${faculty.mobile}</div>
+                            <div class="contact-secondary">${faculty.email}</div>
+                        </td>
+                        ${isAdminLoggedIn ? `
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn edit" onclick="editFaculty(${faculty.id})" title="Edit">✏️</button>
+                                    <button class="action-btn delete" onclick="deleteFaculty(${faculty.id})" title="Delete">🗑️</button>
+                                </div>
+                            </td>
+                        ` : ''}
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // CRUD operations
+        function editCollege(id) {
+            const college = colleges.find(c => c.id === id);
+            if (college) {
+                editingCollege = college;
+                
+                document.getElementById('collegeModalTitle').textContent = 'Edit College';
+                document.getElementById('collegeSubmitBtn').textContent = 'Update College';
+                document.getElementById('collegeName').value = college.name;
+                document.getElementById('collegeAddress').value = college.address;
+                document.getElementById('collegeContact').value = college.contactNumber;
+                document.getElementById('collegeEmail').value = college.email;
+                document.getElementById('collegeWebsite').value = college.website || '';
+                document.getElementById('collegePrincipal').value = college.principal;
+                
+                showCollegeModal();
+            }
+        }
+
+        function deleteCollege(id) {
+            if (confirm('Are you sure you want to delete this college? This will also delete all associated faculty members.')) {
+                colleges = colleges.filter(c => c.id !== id);
+                faculties = faculties.filter(f => f.collegeId !== id);
+                updateCounts();
+                populateCollegeOptions();
+                renderData();
+            }
+        }
+
+        function editFaculty(id) {
+            const faculty = faculties.find(f => f.id === id);
+            if (faculty) {
+                editingFaculty = faculty;
+                
+                document.getElementById('facultyModalTitle').textContent = 'Edit Faculty Member';
+                document.getElementById('facultySubmitBtn').textContent = 'Update Faculty';
+                document.getElementById('facultyName').value = faculty.name;
+                document.getElementById('facultyCollege').value = faculty.collegeId;
+                document.getElementById('facultyDepartment').value = faculty.department;
+                document.getElementById('facultyDesignation').value = faculty.designation;
+                document.getElementById('facultyExperience').value = faculty.experience;
+                document.getElementById('facultyEmailInput').value = faculty.email;
+                document.getElementById('facultyMobile').value = faculty.mobile;
+                
+                showFacultyModal();
+            }
+        }
+
+        function deleteFaculty(id) {
+            if (confirm('Are you sure you want to delete this faculty member?')) {
+                faculties = faculties.filter(f => f.id !== id);
+                updateCounts();
+                renderData();
+            }
+        }
+
+        // Utility functions
+        function updateCounts() {
+            document.getElementById('collegeCount').textContent = colleges.length;
+            document.getElementById('facultyCount').textContent = faculties.length;
         }
 
         function updateAuthUI() {
@@ -814,53 +924,19 @@
                 collegeActionsHeader.style.display = 'none';
                 facultyActionsHeader.style.display = 'none';
             }
-        }
-
-        function updateView() {
-            const tabs = document.querySelectorAll('.tab');
-            const collegesView = document.getElementById('collegesView');
-            const facultiesView = document.getElementById('facultiesView');
-            const collegeFilter = document.getElementById('collegeFilter');
-            const addBtnText = document.getElementById('addBtnText');
-            const searchInput = document.getElementById('searchInput');
-
-            tabs.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === currentView);
-            });
-
-            if (currentView === 'colleges') {
-                collegesView.style.display = 'block';
-                facultiesView.style.display = 'none';
-                collegeFilter.style.display = 'none';
-                addBtnText.textContent = 'Add College';
-                searchInput.placeholder = 'Search colleges...';
-            } else {
-                collegesView.style.display = 'none';
-                facultiesView.style.display = 'block';
-                collegeFilter.style.display = 'block';
-                addBtnText.textContent = 'Add Faculty';
-                searchInput.placeholder = 'Search faculty...';
-            }
-
             renderData();
         }
 
-        function updateCounts() {
-            document.getElementById('collegeCount').textContent = colleges.length;
-            document.getElementById('facultyCount').textContent = faculties.length;
-        }
-
         function populateCollegeOptions() {
-            const collegeFilter = document.getElementById('collegeFilter');
             const facultyCollege = document.getElementById('facultyCollege');
+            const collegeFilter = document.getElementById('collegeFilter');
 
-            // Clear existing options
-            collegeFilter.innerHTML = '<option value="all">All Colleges</option>';
             facultyCollege.innerHTML = '<option value="">Select College</option>';
+            collegeFilter.innerHTML = '<option value="all">All Colleges</option>';
 
             colleges.forEach(college => {
-                collegeFilter.innerHTML += `<option value="${college.id}">${college.name}</option>`;
                 facultyCollege.innerHTML += `<option value="${college.id}">${college.name}</option>`;
+                collegeFilter.innerHTML += `<option value="${college.id}">${college.name}</option>`;
             });
         }
 
@@ -894,3 +970,227 @@
 
                 return filtered;
             }
+        }
+
+        // Event handlers
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                isAdminLoggedIn = true;
+                hideLoginModal();
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                updateAuthUI();
+                alert('Login successful!');
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        }
+
+        function logout() {
+            isAdminLoggedIn = false;
+            updateAuthUI();
+        }
+
+        function handleCollegeSubmit(e) {
+            e.preventDefault();
+            
+            const collegeData = {
+                name: document.getElementById('collegeName').value,
+                address: document.getElementById('collegeAddress').value,
+                contactNumber: document.getElementById('collegeContact').value,
+                email: document.getElementById('collegeEmail').value,
+                website: document.getElementById('collegeWebsite').value,
+                principal: document.getElementById('collegePrincipal').value
+            };
+
+            if (editingCollege) {
+                const index = colleges.findIndex(c => c.id === editingCollege.id);
+                colleges[index] = { ...collegeData, id: editingCollege.id };
+                editingCollege = null;
+                alert('College updated successfully!');
+            } else {
+                const newCollege = { ...collegeData, id: Date.now() };
+                colleges.push(newCollege);
+                alert('College added successfully!');
+            }
+            
+            hideCollegeModal();
+            document.getElementById('collegeForm').reset();
+            document.getElementById('collegeModalTitle').textContent = 'Add New College';
+            document.getElementById('collegeSubmitBtn').textContent = 'Add College';
+            updateCounts();
+            populateCollegeOptions();
+            renderData();
+        }
+
+        function handleFacultySubmit(e) {
+            e.preventDefault();
+            
+            const facultyData = {
+                name: document.getElementById('facultyName').value,
+                collegeId: parseInt(document.getElementById('facultyCollege').value),
+                department: document.getElementById('facultyDepartment').value,
+                designation: document.getElementById('facultyDesignation').value,
+                experience: document.getElementById('facultyExperience').value,
+                email: document.getElementById('facultyEmailInput').value,
+                mobile: document.getElementById('facultyMobile').value
+            };
+
+            if (editingFaculty) {
+                const index = faculties.findIndex(f => f.id === editingFaculty.id);
+                faculties[index] = { ...facultyData, id: editingFaculty.id };
+                editingFaculty = null;
+                alert('Faculty updated successfully!');
+            } else {
+                const newFaculty = { ...facultyData, id: Date.now() };
+                faculties.push(newFaculty);
+                alert('Faculty added successfully!');
+            }
+            
+            hideFacultyModal();
+            document.getElementById('facultyForm').reset();
+            document.getElementById('facultyModalTitle').textContent = 'Add New Faculty Member';
+            document.getElementById('facultySubmitBtn').textContent = 'Add Faculty';
+            updateCounts();
+            renderData();
+        }
+
+        // Export functions
+        function exportData(format) {
+            const data = getFilteredData();
+            let exportData = [];
+            
+            if (currentView === 'colleges') {
+                exportData = data.map(college => ({
+                    'College Name': college.name,
+                    'Address': college.address,
+                    'Contact Number': college.contactNumber,
+                    'Email': college.email,
+                    'Website': college.website || '',
+                    'Principal': college.principal
+                }));
+            } else {
+                exportData = data.map(faculty => {
+                    const college = colleges.find(c => c.id === faculty.collegeId);
+                    const departmentLabel = departments[faculty.department] || faculty.department;
+                    
+                    return {
+                        'Faculty Name': faculty.name,
+                        'College': college ? college.name : 'Unknown',
+                        'Department': departmentLabel,
+                        'Designation': faculty.designation,
+                        'Experience': faculty.experience,
+                        'Email': faculty.email,
+                        'Mobile': faculty.mobile
+                    };
+                });
+            }
+
+            const filename = `ayurveda_${currentView}_${new Date().toISOString().split('T')[0]}.${format === 'csv' ? 'csv' : 'xls'}`;
+            
+            if (format === 'csv') {
+                exportToCSV(exportData, filename);
+            } else {
+                exportToExcel(exportData, filename);
+            }
+        }
+
+        function exportToCSV(data, filename) {
+            if (data.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+            ].join('\n');
+
+            downloadFile(csvContent, filename, 'text/csv');
+        }
+
+        function exportToExcel(data, filename) {
+            if (data.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            const excelContent = [
+                headers.join('\t'),
+                ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join('\t'))
+            ].join('\n');
+
+            downloadFile(excelContent, filename, 'application/vnd.ms-excel');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Button event listeners
+            document.getElementById('loginBtn').onclick = showLoginModal;
+            document.getElementById('logoutBtn').onclick = logout;
+            document.getElementById('cancelLogin').onclick = hideLoginModal;
+            
+            document.getElementById('publicAddBtn').onclick = function() {
+                if (currentView === 'colleges') {
+                    showCollegeModal();
+                } else {
+                    showFacultyModal();
+                }
+            };
+            
+            document.getElementById('collegesTab').onclick = switchToColleges;
+            document.getElementById('facultiesTab').onclick = switchToFaculties;
+            
+            document.getElementById('cancelCollege').onclick = hideCollegeModal;
+            document.getElementById('cancelFaculty').onclick = hideFacultyModal;
+            
+            document.getElementById('exportCsvBtn').onclick = () => exportData('csv');
+            document.getElementById('exportExcelBtn').onclick = () => exportData('excel');
+            
+            // Form submissions
+            document.getElementById('loginForm').onsubmit = handleLogin;
+            document.getElementById('collegeForm').onsubmit = handleCollegeSubmit;
+            document.getElementById('facultyForm').onsubmit = handleFacultySubmit;
+            
+            // Search and filter
+            document.getElementById('searchInput').oninput = function() {
+                renderData();
+            };
+            
+            document.getElementById('collegeFilter').onchange = function() {
+                renderData();
+            };
+            
+            // Close modals when clicking outside
+            document.onclick = function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('show');
+                }
+            };
+            
+            // Initialize display
+            updateCounts();
+            populateCollegeOptions();
+            renderData();
+        });
+    </script>
+</body>
+</html>
